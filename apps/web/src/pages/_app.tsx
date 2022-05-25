@@ -8,7 +8,7 @@ import {
 import "../styles/globals.css";
 import { NotificationsProvider } from "@mantine/notifications";
 import { useLocalStorage, useHotkeys } from "@mantine/hooks";
-
+import "../styles/globals.css";
 export default function App(props: AppProps & { colorScheme: ColorScheme }) {
   const { Component, pageProps } = props;
   const [colorScheme, setColorScheme] = useLocalStorage<ColorScheme>({

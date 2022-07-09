@@ -19,9 +19,10 @@
     "express-joi-validation": "^5.0.1",
     "joi": "^17.6.0",
     "jsonwebtoken": "^8.5.1",
-    "logger": "*",
     "mongoose": "^6.3.3",
     "morgan": "^1.10.0",
+    "socket.io": "^4.5.1",
+    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.4.0",
     "uuid": "^8.3.2"
   },
   "devDependencies": {

@@ -1,54 +1,96 @@
+// src/pages/_app.tsx
+import { withTRPC } from "@trpc/next";
+import type { AppRouter } from "../server/router";
+import type {
+  AppType,
+  NextComponentType,
+  NextPageContext,
+} from "next/dist/shared/lib/utils";
+import superjson from "superjson";
+import { SessionProvider, signIn, useSession } from "next-auth/react";
+import "../styles/globals.css";
+import { useRouter } from "next/router";
+import { FC, useEffect } from "react";
+import { AuthEnabledComponentConfig } from "../utils/types";
 import { AppProps } from "next/app";
-import Head from "next/head";
-import {
-  ColorScheme,
-  ColorSchemeProvider,
-  MantineProvider,
-} from "@mantine/core";
-import "../styles/globals.css";
-import { NotificationsProvider } from "@mantine/notifications";
-import { useLocalStorage, useHotkeys } from "@mantine/hooks";
-import "../styles/globals.css";
-export default function App(props: AppProps & { colorScheme: ColorScheme }) {
-  const { Component, pageProps } = props;
-  const [colorScheme, setColorScheme] = useLocalStorage<ColorScheme>({
-    key: "mantine-color-scheme",
-    defaultValue: "light",
-    getInitialValueInEffect: true,
-  });
 
-  const toggleColorScheme = (value?: ColorScheme) =>
-    setColorScheme(value || (colorScheme === "dark" ? "light" : "dark"));
+type AppAuthProps = AppProps & {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Component: NextComponentType<NextPageContext, any, {}> &
+    Partial<AuthEnabledComponentConfig>;
+};
 
-  useHotkeys([["mod+J", () => toggleColorScheme()]]);
+const Auth: FC = ({ children }) => {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const loading = status === "loading";
+
+  const isUser = !!session?.user;
+  useEffect(() => {
+    if (loading) return; // Do nothing while loading
+    if (!isUser) router.replace("/signin"); // If not authenticated, force log in
+  }, [isUser, loading]);
+
+  if (isUser) {
+    return <>{children}</>;
+  }
+
+  // Session is being fetched, or no user.
+  // If no user, useEffect() will redirect.
+  return <div>Loading...</div>;
+};
+
+const RESTRICTED_PATHS = ["/app", "/app/room"];
+
+const MyApp = ({
+  Component,
+  pageProps: { session, ...pageProps },
+  router: { route },
+}: AppAuthProps) => {
+  const requireAuth = RESTRICTED_PATHS.some((path) => route.startsWith(path));
 
   return (
-    <>
-      <Head>
-        <title>Mantine next example</title>
-        <meta
-          name="viewport"
-          content="minimum-scale=1, initial-scale=1, width=device-width"
-        />
-        <link rel="shortcut icon" href="/favicon.svg" />
-      </Head>
-
-      <ColorSchemeProvider
-        colorScheme={colorScheme}
-        toggleColorScheme={toggleColorScheme}
-      >
-        <MantineProvider
-          theme={{ colorScheme }}
-          withGlobalStyles
-          withNormalizeCSS
-        >
-          <NotificationsProvider>
-            <div className={colorScheme === "dark" ? "dark" : ""}>
-              <Component {...pageProps} />
-            </div>
-          </NotificationsProvider>
-        </MantineProvider>
-      </ColorSchemeProvider>
-    </>
+    <SessionProvider session={session} refetchInterval={5 * 60}>
+      {/* {requireAuth ? (
+        <Auth> */}
+      <Component {...pageProps} />
+      {/* </Auth>
+      ) : (
+        <Component {...pageProps} />
+      )} */}
+    </SessionProvider>
   );
-}
+};
+
+const getBaseUrl = () => {
+  if (typeof window !== "undefined") {
+    return "";
+  }
+  if (process.browser) return ""; // Browser should use current path
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`; // SSR should use vercel url
+
+  return `http://localhost:${process.env.PORT ?? 3000}`; // dev SSR should use localhost
+};
+
+export default withTRPC<AppRouter>({
+  config({ ctx }) {
+    /**
+     * If you want to use SSR, you need to use the server's full URL
+     * @link https://trpc.io/docs/ssr
+     */
+    const url = `${getBaseUrl()}/api/trpc`;
+
+    return {
+      url,
+      transformer: superjson,
+      /**
+       * @link https://react-query.tanstack.com/reference/QueryClient
+       */
+      // queryClientConfig: { defaultOptions: { queries: { staleTime: 60 } } },
+    };
+  },
+  /**
+   * @link https://trpc.io/docs/ssr
+   */
+  ssr: false,
+})(MyApp);

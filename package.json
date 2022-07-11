@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "build": "turbo run build",
-    "dev": "docker-compose -f docker-compose.dev.yml up -d && turbo run dev --parallel",
+    "dev": "turbo run dev --parallel",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "stop": "docker-compose -f docker-compose.dev.yml down && docker-compose -f docker-compose.dev.yml rm -f"

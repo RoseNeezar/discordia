@@ -1,0 +1,23 @@
+{
+  "name": "db",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.js",
+  "scripts": {
+    "postinstall": "pnpm generate && pnpm build",
+    "generate": "pnpm prisma generate && pnpm prisma db push",
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "prisma": "^4.0.0",
+    "tsconfig": "workspace:*",
+    "typescript": "^4.5.2"
+  },
+  "dependencies": {
+    "@prisma/client": "^4.0.0"
+  },
+  "prisma": {
+    "schema": "./prisma/schema.prisma",
+    "seed": "ts-node ./prisma/seed.ts"
+  }
+}

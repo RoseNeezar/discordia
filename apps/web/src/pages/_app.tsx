@@ -13,6 +13,7 @@ import { useRouter } from "next/router";
 import { FC, useEffect } from "react";
 import { AuthEnabledComponentConfig } from "../utils/types";
 import { AppProps } from "next/app";
+import CustomBrowserRouter from "../utils/CustomBrowserRouter";
 
 type AppAuthProps = AppProps & {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -40,25 +41,17 @@ const Auth: FC = ({ children }) => {
   return <div>Loading...</div>;
 };
 
-const RESTRICTED_PATHS = ["/app", "/app/room"];
-
 const MyApp = ({
   Component,
   pageProps: { session, ...pageProps },
-  router: { route },
-}: AppAuthProps) => {
-  const requireAuth = RESTRICTED_PATHS.some((path) => route.startsWith(path));
-
+  router,
+}: AppProps) => {
   return (
-    <SessionProvider session={session} refetchInterval={5 * 60}>
-      {/* {requireAuth ? (
-        <Auth> */}
-      <Component {...pageProps} />
-      {/* </Auth>
-      ) : (
+    <CustomBrowserRouter asPath={router.asPath}>
+      <SessionProvider session={session} refetchInterval={5 * 60}>
         <Component {...pageProps} />
-      )} */}
-    </SessionProvider>
+      </SessionProvider>
+    </CustomBrowserRouter>
   );
 };
 

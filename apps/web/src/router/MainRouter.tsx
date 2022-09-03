@@ -7,7 +7,6 @@ const Homes: FC<{ data: any }> = ({ data }) => {
     <div>
       <h1>Home Page</h1>
       <Link to="/app/home">Public</Link>
-      <h1>Ho---{data}</h1>
     </div>
   );
 };
